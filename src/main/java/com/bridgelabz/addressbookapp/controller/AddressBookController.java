@@ -2,11 +2,13 @@
 
 /**
  * REST Controller for the Address Book application.
- * Exposes five endpoints covering GET, POST, PUT and DELETE HTTP methods.
- * All responses are wrapped in ResponseEntity containing a ResponseDTO.
+ * Delegates all business logic to AddressBookService via constructor injection.
+ * Returns responses wrapped in ResponseEntity containing a ResponseDTO.
  */
 import com.bridgelabz.addressbookapp.dto.AddressBookDTO;
 import com.bridgelabz.addressbookapp.dto.ResponseDTO;
+import com.bridgelabz.addressbookapp.service.AddressBookService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,38 +24,46 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/addressbookservice")
 public class AddressBookController {
 
-    // Returns a welcome message confirming the service is running
+    @Autowired
+    private AddressBookService addressBookService;
+
+    // Returns all address book entries from the service layer
     @GetMapping("/")
     public ResponseEntity<ResponseDTO> getAddressBook() {
-        ResponseDTO response = new ResponseDTO("Address Book Service is up!", "OK");
+        ResponseDTO response = new ResponseDTO("Fetched All AddressBook Entries",
+                                               addressBookService.getAllAddressBook());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // Returns a single address book entry identified by the given id
+    // Returns a single address book entry by id via the service layer
     @GetMapping("/get/{id}")
     public ResponseEntity<ResponseDTO> getAddressBookById(@PathVariable int id) {
-        ResponseDTO response = new ResponseDTO("Get AddressBook Entry by Id", id);
+        ResponseDTO response = new ResponseDTO("Fetched AddressBook Entry",
+                                               addressBookService.getAddressBookById(id));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // Creates a new address book entry from the JSON request body
+    // Delegates creation of a new entry to the service and returns the saved model
     @PostMapping("/create")
     public ResponseEntity<ResponseDTO> createAddressBook(@RequestBody AddressBookDTO addressBookDTO) {
-        ResponseDTO response = new ResponseDTO("Created AddressBook Entry", addressBookDTO);
+        ResponseDTO response = new ResponseDTO("Created AddressBook Entry",
+                                               addressBookService.createAddressBook(addressBookDTO));
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    // Updates an existing address book entry identified by id
+    // Delegates update of an existing entry by id to the service
     @PutMapping("/update/{id}")
     public ResponseEntity<ResponseDTO> updateAddressBook(@PathVariable int id,
                                                          @RequestBody AddressBookDTO addressBookDTO) {
-        ResponseDTO response = new ResponseDTO("Updated AddressBook Entry with id: " + id, addressBookDTO);
+        ResponseDTO response = new ResponseDTO("Updated AddressBook Entry",
+                                               addressBookService.updateAddressBook(id, addressBookDTO));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // Deletes the address book entry identified by id
+    // Delegates deletion of an entry by id to the service
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ResponseDTO> deleteAddressBook(@PathVariable int id) {
+        addressBookService.deleteAddressBook(id);
         ResponseDTO response = new ResponseDTO("Deleted AddressBook Entry with id: " + id, id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
