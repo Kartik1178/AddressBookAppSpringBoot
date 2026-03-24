@@ -2,26 +2,20 @@
 
 /**
  * Data Transfer Object for AddressBook REST requests.
- * Carries fields sent by the client in POST and PUT calls.
- * Validation constraints will be added in a later use case.
+ * Lombok annotations auto-generate getters, setters, constructors
+ * and toString at compile time, eliminating boilerplate code.
  */
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
 public class AddressBookDTO {
 
     private String name;
     private String phoneNumber;
-
-    // Default no-args constructor
-    public AddressBookDTO() {}
-
-    // Getter for name
-    public String getName() { return name; }
-
-    // Setter for name
-    public void setName(String name) { this.name = name; }
-
-    // Getter for phoneNumber
-    public String getPhoneNumber() { return phoneNumber; }
-
-    // Setter for phoneNumber
-    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 }
