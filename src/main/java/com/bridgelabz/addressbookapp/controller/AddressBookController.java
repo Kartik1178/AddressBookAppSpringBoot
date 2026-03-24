@@ -2,8 +2,9 @@
 
 /**
  * REST Controller for the Address Book application.
- * Lombok @Slf4j provides a pre-configured SLF4J logger instance.
- * Every request is logged at INFO level before delegating to the service.
+ * @Valid on POST and PUT request bodies triggers Bean Validation constraints
+ * defined in AddressBookDTO before the service layer is invoked.
+ * All exceptions are handled centrally by GlobalExceptionHandler.
  */
 import com.bridgelabz.addressbookapp.dto.AddressBookDTO;
 import com.bridgelabz.addressbookapp.dto.ResponseDTO;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 @Slf4j
 @RestController
 @RequestMapping("/addressbookservice")
@@ -29,7 +32,7 @@ public class AddressBookController {
     @Autowired
     private AddressBookService addressBookService;
 
-    // Logs request and returns all address book entries
+    // Logs request and returns all stored address book entries
     @GetMapping("/")
     public ResponseEntity<ResponseDTO> getAddressBook() {
         log.info("GET /addressbookservice/");
@@ -38,7 +41,7 @@ public class AddressBookController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // Logs request and returns a single entry by id
+    // Logs request and returns the entry matching the given id
     @GetMapping("/get/{id}")
     public ResponseEntity<ResponseDTO> getAddressBookById(@PathVariable int id) {
         log.info("GET /addressbookservice/get/{}", id);
@@ -47,26 +50,28 @@ public class AddressBookController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // Logs request and creates a new address book entry
+    // Validates request body then delegates creation to the service layer
     @PostMapping("/create")
-    public ResponseEntity<ResponseDTO> createAddressBook(@RequestBody AddressBookDTO addressBookDTO) {
-        log.info("POST /addressbookservice/create - payload: {}", addressBookDTO);
+    public ResponseEntity<ResponseDTO> createAddressBook(
+            @Valid @RequestBody AddressBookDTO addressBookDTO) {
+        log.info("POST /addressbookservice/create - {}", addressBookDTO);
         ResponseDTO response = new ResponseDTO("Created AddressBook Entry",
                                                addressBookService.createAddressBook(addressBookDTO));
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    // Logs request and updates an existing entry by id
+    // Validates request body then delegates update by id to the service layer
     @PutMapping("/update/{id}")
-    public ResponseEntity<ResponseDTO> updateAddressBook(@PathVariable int id,
-                                                         @RequestBody AddressBookDTO addressBookDTO) {
-        log.info("PUT /addressbookservice/update/{} - payload: {}", id, addressBookDTO);
+    public ResponseEntity<ResponseDTO> updateAddressBook(
+            @PathVariable int id,
+            @Valid @RequestBody AddressBookDTO addressBookDTO) {
+        log.info("PUT /addressbookservice/update/{} - {}", id, addressBookDTO);
         ResponseDTO response = new ResponseDTO("Updated AddressBook Entry",
                                                addressBookService.updateAddressBook(id, addressBookDTO));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // Logs request and deletes the entry with the given id
+    // Logs request and delegates deletion by id to the service layer
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ResponseDTO> deleteAddressBook(@PathVariable int id) {
         log.info("DELETE /addressbookservice/delete/{}", id);

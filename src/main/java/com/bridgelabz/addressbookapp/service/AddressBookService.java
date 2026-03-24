@@ -2,10 +2,11 @@
 
 /**
  * Service layer for the Address Book application.
- * Lombok @Slf4j activates structured SLF4J logging at class level.
- * Logging levels and output targets are configured in application-*.properties.
+ * Throws AddressBookException when a requested entry cannot be found,
+ * allowing GlobalExceptionHandler to return a structured error response.
  */
 import com.bridgelabz.addressbookapp.dto.AddressBookDTO;
+import com.bridgelabz.addressbookapp.exception.AddressBookException;
 import com.bridgelabz.addressbookapp.model.AddressBook;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,49 +22,45 @@ public class AddressBookService {
     private final List<AddressBook> addressBookList = new ArrayList<>();
     private final AtomicInteger     idCounter       = new AtomicInteger(1);
 
-    // Returns all entries and logs the current count at DEBUG level
+    // Returns all entries currently held in memory
     public List<AddressBook> getAllAddressBook() {
         log.debug("Retrieving all entries, count: {}", addressBookList.size());
         return addressBookList;
     }
 
-    // Returns a single entry by id; logs at DEBUG, returns null if not found
+    // Returns entry matching id or throws AddressBookException if absent
     public AddressBook getAddressBookById(int id) {
         log.debug("Retrieving entry with id: {}", id);
         return addressBookList.stream()
                 .filter(a -> a.getId() == id)
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new AddressBookException(
+                        "AddressBook entry with id " + id + " was not found"));
     }
 
-    // Creates a new entry, persists it in memory and logs at INFO level
+    // Creates and stores a new AddressBook entry built from the validated DTO
     public AddressBook createAddressBook(AddressBookDTO dto) {
         AddressBook entry = new AddressBook(idCounter.getAndIncrement(),
                                             dto.getName(),
                                             dto.getPhoneNumber());
         addressBookList.add(entry);
-        log.info("Created address book entry: {}", entry);
+        log.info("Created entry: {}", entry);
         return entry;
     }
 
-    // Updates an existing entry and logs; warns if id is not found
+    // Updates fields of the entry identified by id; throws if not found
     public AddressBook updateAddressBook(int id, AddressBookDTO dto) {
         AddressBook entry = getAddressBookById(id);
-        if (entry != null) {
-            entry.setName(dto.getName());
-            entry.setPhoneNumber(dto.getPhoneNumber());
-            log.info("Updated address book entry: {}", entry);
-        } else {
-            log.warn("Entry with id: {} not found for update", id);
-        }
+        entry.setName(dto.getName());
+        entry.setPhoneNumber(dto.getPhoneNumber());
+        log.info("Updated entry: {}", entry);
         return entry;
     }
 
-    // Removes an entry by id and logs the outcome at INFO or WARN level
-    public boolean deleteAddressBook(int id) {
-        boolean removed = addressBookList.removeIf(a -> a.getId() == id);
-        if (removed) log.info("Deleted entry with id: {}", id);
-        else         log.warn("Entry with id: {} not found for deletion", id);
-        return removed;
+    // Removes the entry identified by id; throws AddressBookException if not found
+    public void deleteAddressBook(int id) {
+        AddressBook entry = getAddressBookById(id);
+        addressBookList.remove(entry);
+        log.info("Deleted entry with id: {}", id);
     }
 }
