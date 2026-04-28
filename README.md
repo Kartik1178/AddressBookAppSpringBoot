@@ -8,6 +8,7 @@ A Spring Boot REST API for managing an address book.
 - MySQL
 - Lombok
 - Maven
+- React
 
 ## Sections
 - Section 1 : App Setup and REST Controller
